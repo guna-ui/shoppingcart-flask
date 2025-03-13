@@ -51,5 +51,14 @@ def update_product(id):
 
     return jsonify({"message": "Product updated!", "product": product})
 
+@app.route('/product/<int:id>',methods=["DELETE"])
+def delete_product(id):
+    global products;
+    product=next((d for d in products if d["id"]==id),None)
+    if not product:
+        return jsonify({"error":"product not found"})
+    products=[p for p in products if p["id"]!=id]
+    return jsonify({"message": "Product deleted successfully!"})
+
 if __name__ == "__main__":
     app.run(debug=True)
