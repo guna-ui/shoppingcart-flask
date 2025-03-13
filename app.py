@@ -28,6 +28,16 @@ def get_products():
 @app.route('/products',methods=['POST'])
 def add_product():
     data=request.get_json()
+    if not data:
+        return jsonify({"error":"Empty request body"}),404
+    required_fields=["id","name","price"]
+    missing_fields=[field for field in required_fields if field not in data]
+    if missing_fields:
+        return jsonify({"error":f"Missing fields : {', '.join(missing_fields)} "}),400
+    if not isinstance(data["id"],int) or not isinstance(data["price"],(int,float)):
+         return jsonify({"error": "Invalid data type: 'id' should be int, 'price' should be int or float"}), 400
+    if any(p["id"]==data["id"] for p in products):
+        return jsonify({"error":"Product id already existes"},400)
     products.append(data)
     return jsonify({"message":"Products are added!","product":products}),201
 
@@ -44,6 +54,15 @@ def update_product(id):
     if not product:
         return jsonify({"error":"product not found"}),404
     data=request.get_json()
+    
+    if not data :
+        return jsonify({"error":"empty request"}),400
+    
+    if "name" in data and not isinstance(data["name"],str):
+        return jsonify({"error":"name should be string"}),404
+    if "price" in data and not isinstance(data["price"],(int,float)):
+        return jsonify({"error":"price should be int or float"}),404
+    
     if "name" in data:
         product["name"]=data["name"]
     if "price" in data:
@@ -58,7 +77,10 @@ def delete_product(id):
     if not product:
         return jsonify({"error":"product not found"})
     products=[p for p in products if p["id"]!=id]
-    return jsonify({"message": "Product deleted successfully!"})
+    return jsonify({
+        "message":"product deleted successfully",
+        "deleted_product":product})
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
