@@ -1,0 +1,10 @@
+{
+    "configurations": [
+      {
+        "type": "debugpy",
+        "request": "launch",
+        "name": "shopping Cart",
+        "program": "${workspaceFolder}/app.py"
+      }
+    ]
+  }
