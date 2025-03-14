@@ -3,9 +3,14 @@ from flask import Flask,jsonify,request
 app = Flask(__name__)
 
 products = [
-    {"id": 1, "name": "Laptop", "price": 75000},
-    {"id": 2, "name": "Phone", "price": 25000},
-    {"id": 3, "name": "Tablet", "price": 30000}
+    {"id": 1, "name": "Laptop", "price": 45000},
+    {"id": 2, "name": "Mobile", "price": 20000},
+    {"id": 3, "name": "Tablet", "price": 15000},
+    {"id": 4, "name": "Smartwatch", "price": 5000},
+    {"id": 5, "name": "Earbuds", "price": 3000},
+    {"id": 6, "name": "Monitor", "price": 12000},
+    {"id": 7, "name": "Keyboard", "price": 2500},
+    {"id": 8, "name": "Mouse", "price": 1500}
 ]
 
 
@@ -13,17 +18,28 @@ products = [
 def home():
    return "Welcome to Flask API!"
 
+# curl "http://127.0.0.1:5000/products?limit=3&offset=0"
+
 @app.route('/products',methods=["GET"])
 def get_products():
     min_price=request.args.get('min_price',type=int)
     Name     =request.args.get('name')
+    limit    =request.args.get('limit',default=0,type=int)
+    offset   =request.args.get('offset',default=0,type=int)
     if min_price:
         filterd_products=[p for p in products if p['price']>=min_price]
         return jsonify(filterd_products)
     if Name :
         filtered_products=[p for p in products if p['name']==Name]
         return jsonify(filtered_products)
-    return jsonify(products)
+    #Apply pagination
+    paginated_products=products[offset: offset+limit]
+    return jsonify({
+        "total":len(products),
+        "limit":limit,
+        "offset":offset,
+        "products": paginated_products
+    })
 
 @app.route('/products',methods=['POST'])
 def add_product():
