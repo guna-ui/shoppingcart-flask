@@ -1,6 +1,23 @@
 from flask import Flask,jsonify,request
+from flask_jwt_extended import JWTManager,create_access_token,jwt_required,get_jwt_identity
 
 app = Flask(__name__)
+
+app.config["JWT_SECRET_KEY"]='gunasekhar'
+jwt=JWTManager(app)
+
+users={"admin":"password123"}
+
+@app.route('/login',methods=["POST"])
+def login():
+    data=request.get_json()
+    username=data.get("username")
+    password=data.get("password")
+    
+    if username in users and users[username]==password:
+        access_token=create_access_token(identity=username)
+        return jsonify({"access_token":access_token})
+    return jsonify({"error":"Invalid credentials"}),404
 
 products = [
     {"id": 1, "name": "Laptop", "price": 45000},
@@ -22,8 +39,10 @@ def home():
 # curl "http://127.0.0.1:5000/products?sort_by=price&order=asc"
 
 @app.route('/products',methods=["GET"])
+@jwt_required()
 def get_products():
     # Get pagination params
+    current_user=get_jwt_identity()
     limit = request.args.get('limit', default=5, type=int)
     offset = request.args.get('offset', default=0, type=int)
 
@@ -52,7 +71,8 @@ def get_products():
         "offset": offset,
         "sort_by": sort_by,
         "order": order,
-        "products": paginated_products
+        "products": paginated_products,
+        "user":current_user
     })
 
 @app.route('/products',methods=['POST'])
