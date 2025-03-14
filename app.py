@@ -19,25 +19,39 @@ def home():
    return "Welcome to Flask API!"
 
 # curl "http://127.0.0.1:5000/products?limit=3&offset=0"
+# curl "http://127.0.0.1:5000/products?sort_by=price&order=asc"
 
 @app.route('/products',methods=["GET"])
 def get_products():
-    min_price=request.args.get('min_price',type=int)
-    Name     =request.args.get('name')
-    limit    =request.args.get('limit',default=0,type=int)
-    offset   =request.args.get('offset',default=0,type=int)
-    if min_price:
-        filterd_products=[p for p in products if p['price']>=min_price]
-        return jsonify(filterd_products)
-    if Name :
-        filtered_products=[p for p in products if p['name']==Name]
-        return jsonify(filtered_products)
-    #Apply pagination
-    paginated_products=products[offset: offset+limit]
+    # Get pagination params
+    limit = request.args.get('limit', default=5, type=int)
+    offset = request.args.get('offset', default=0, type=int)
+
+    # Get sorting params
+    sort_by = request.args.get('sort_by', default='id', type=str)  # Default: sort by 'id'
+    order = request.args.get('order', default='asc', type=str)  # Default: ascending
+
+    # Validate sort_by field
+    valid_sort_fields = {'id', 'name', 'price'}
+    if sort_by not in valid_sort_fields:
+        return jsonify({"error": f"Invalid sort field. Choose from {valid_sort_fields}"}), 400
+
+    # Validate order field
+    if order not in {'asc', 'desc'}:
+        return jsonify({"error": "Invalid order. Choose 'asc' or 'desc'"}), 400
+
+    # Sort the products
+    sorted_products = sorted(products, key=lambda x: x[sort_by], reverse=(order == 'desc'))
+
+    # Apply pagination
+    paginated_products = sorted_products[offset: offset + limit]
+
     return jsonify({
-        "total":len(products),
-        "limit":limit,
-        "offset":offset,
+        "total": len(products),
+        "limit": limit,
+        "offset": offset,
+        "sort_by": sort_by,
+        "order": order,
         "products": paginated_products
     })
 
